@@ -197,9 +197,9 @@ export const cleanAllChat = (id) => async (dispatch) => {
 
 export const sendMessageWithFile = (fromUID, data, path, base64) => (dispatch) => {
   const uidChat = data.toUID ? data.toUID : 'broadcast';
-  const saveDatabase = { ...data };
+  const saveDatabase = { ...data, fromUID };
   saveDatabase.msg.file = path;
-  database.setMessage(uidChat, { ...saveDatabase, fromUID }, 'pending').then((res) => {
+  database.setMessage(uidChat, { ...saveDatabase }, 'pending').then((res) => {
     saveDatabase.msg.file = base64;
     chatService.send(JSON.stringify(saveDatabase));
     dispatch({

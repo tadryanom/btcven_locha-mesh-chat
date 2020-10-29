@@ -173,6 +173,7 @@ export default class CoreDatabase {
             file: obj.msg.file
           }
           : null;
+        console.log('sendImage', obj);
         chat.messages.push({
           ...obj,
           id: obj.msgID,
@@ -185,7 +186,7 @@ export default class CoreDatabase {
         resolve({ file, time });
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.warn(['en el setFile', err]);
+        console.warn('setMessage', err);
         // reject(err);
       }
     });

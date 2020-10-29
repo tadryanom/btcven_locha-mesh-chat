@@ -41,6 +41,7 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -216,7 +217,8 @@ public class ChatServiceModule extends ReactContextBaseJavaModule {
      */
     @ReactMethod public void sendMessage(String contents) {
         try {
-            Runtime.getInstance().sendMessage(contents);
+            List<Integer> compressed = Utils.compress(contents);
+            Runtime.getInstance().sendMessage(compressed.toString());
         } catch (RuntimeException e) {
             Log.e(TAG, "Couldn't send message", e);
         }

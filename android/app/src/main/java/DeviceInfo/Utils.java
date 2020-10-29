@@ -4,22 +4,32 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class Utils {
     /**
@@ -176,5 +186,62 @@ public class Utils {
             Log.e("IP Address", ex.toString());
         }
         return ipv4Array;
+    }
+
+
+    public static List<Integer> compress(String uncompressed) {
+        // Build the dictionary.
+        int dictSize = 256;
+        Map<String,Integer> dictionary = new HashMap<String,Integer>();
+        for (int i = 0; i < 256; i++)
+            dictionary.put("" + (char)i, i);
+
+        String w = "";
+        List<Integer> result = new ArrayList<Integer>();
+        for (char c : uncompressed.toCharArray()) {
+            String wc = w + c;
+            if (dictionary.containsKey(wc))
+                w = wc;
+            else {
+                result.add(dictionary.get(w));
+                // Add wc to the dictionary.
+                dictionary.put(wc, dictSize++);
+                w = "" + c;
+            }
+        }
+
+        // Output the code for w.
+        if (!w.equals(""))
+            result.add(dictionary.get(w));
+        return result;
+    }
+
+    /** Decompress a list of output ks to a string. */
+    public static String decompress(List<Integer> compressed) {
+        // Build the dictionary.
+        int dictSize = 256;
+        Map<Integer,String> dictionary = new HashMap<Integer,String>();
+        for (int i = 0; i < 256; i++)
+            dictionary.put(i, "" + (char)i);
+
+        String w = "" + (char)(int)compressed.remove(0);
+        StringBuffer result = new StringBuffer(w);
+        for (int k : compressed) {
+            String entry;
+            if (dictionary.containsKey(k))
+                entry = dictionary.get(k);
+            else if (k == dictSize)
+                entry = w + w.charAt(0);
+            else
+                throw new IllegalArgumentException("Bad compressed k: " + k);
+
+            result.append(entry);
+
+            // Add w+entry[0] to the dictionary.
+            dictionary.put(dictSize++, w + entry.charAt(0));
+
+            w = entry;
+        }
+        return result.toString();
     }
 }
